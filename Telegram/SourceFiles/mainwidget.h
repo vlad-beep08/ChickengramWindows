@@ -144,6 +144,7 @@ public:
 
 	[[nodiscard]] PeerData *peer() const;
 	[[nodiscard]] Ui::ChatTheme *customChatTheme() const;
+	[[nodiscard]] not_null<Ui::ChatTheme*> islandChatTheme() const;
 
 	int backgroundFromY() const;
 	void showSection(

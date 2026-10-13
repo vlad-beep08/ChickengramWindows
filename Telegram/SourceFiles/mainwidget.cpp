@@ -3028,7 +3028,7 @@ void MainWidget::setupIslands() {
 		AyuDesign::EnsureWebTheme();
 	});
 	// WHY: the chat widget may still hold the previous chat's wallpaper when
-	// this fires, so the backdrop keeps the theme the stream itself resolved.
+	// this fires, so the whole backdrop uses the theme the stream resolved.
 	auto chatTheme = _controller->activeChatValue(
 	) | rpl::map([](Dialogs::Key key) {
 		const auto history = key.history();
@@ -3079,37 +3079,23 @@ void MainWidget::updateIslands(int dialogsWidth) {
 	_dialogsCorners->raise();
 }
 
+not_null<Ui::ChatTheme*> MainWidget::islandChatTheme() const {
+	return _islandChatTheme
+		? not_null<Ui::ChatTheme*>(_islandChatTheme.get())
+		: _controller->currentChatTheme();
+}
+
 void MainWidget::paintIslandBackdrop(QPainter &p, QRect clip) {
 	const auto canvas = parentWidget();
-	const auto canvasSize = canvas ? canvas->size() : size();
 	const auto shift = pos();
-	const auto paused = _controller->isGifPausedAtLeastFor(
-		Window::GifPauseReason::Any);
-	const auto paint = [&](not_null<Ui::ChatTheme*> theme, QRect part) {
-		if (part.isEmpty()) {
-			return;
-		}
-		p.save();
-		p.setClipRect(part, Qt::IntersectClip);
-		p.translate(-shift);
-		Window::SectionWidget::PaintBackground(
-			p,
-			theme,
-			canvasSize,
-			part.translated(shift),
-			paused);
-		p.restore();
-	};
-	// A chat's own wallpaper stays inside the chat, the left side keeps the common one.
-	const auto split = std::clamp(_history->x(), 0, width());
-	paint(
-		_controller->defaultChatTheme().get(),
-		clip.intersected(QRect(0, 0, split, height())));
-	paint(
-		(_islandChatTheme
-			? _islandChatTheme.get()
-			: _controller->currentChatTheme().get()),
-		clip.intersected(QRect(split, 0, width() - split, height())));
+	p.translate(-shift);
+	Window::SectionWidget::PaintBackground(
+		p,
+		islandChatTheme(),
+		canvas ? canvas->size() : size(),
+		clip.translated(shift),
+		_controller->isGifPausedAtLeastFor(Window::GifPauseReason::Any));
+	p.translate(shift);
 	AyuDesign::PaintIslandShadow(p, _dialogsIsland);
 	AyuDesign::PaintIslandShadow(p, _thirdIslandShown);
 	AyuDesign::PaintIslandShadow(p, _mainIsland);

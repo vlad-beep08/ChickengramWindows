@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "menu/menu_mark_as_read.h"
 #include "mainwindow.h"
+#include "mainwidget.h"
 #include "window/window_session_controller.h"
 #include "window/window_controller.h"
 #include "window/window_main_menu.h"
@@ -291,10 +292,9 @@ QRect FiltersMenu::webIsland() const {
 }
 
 void FiltersMenu::paintWebBackground(QPainter &p, QRect clip) {
-	// The folders column never shows the open chat's own wallpaper.
 	SectionWidget::PaintBackground(
 		p,
-		_session->defaultChatTheme().get(),
+		_session->content()->islandChatTheme(),
 		_parent->size(),
 		clip,
 		_session->isGifPausedAtLeastFor(GifPauseReason::Any));
@@ -343,7 +343,7 @@ void FiltersMenu::validateWebCache(QRect island) {
 		q.translate(-island.topLeft());
 		SectionWidget::PaintBackground(
 			q,
-			_session->defaultChatTheme().get(),
+			_session->content()->islandChatTheme(),
 			_parent->size(),
 			island);
 	}
