@@ -291,9 +291,10 @@ QRect FiltersMenu::webIsland() const {
 }
 
 void FiltersMenu::paintWebBackground(QPainter &p, QRect clip) {
+	// The folders column never shows the open chat's own wallpaper.
 	SectionWidget::PaintBackground(
 		p,
-		_session->currentChatTheme(),
+		_session->defaultChatTheme().get(),
 		_parent->size(),
 		clip,
 		_session->isGifPausedAtLeastFor(GifPauseReason::Any));
@@ -342,7 +343,7 @@ void FiltersMenu::validateWebCache(QRect island) {
 		q.translate(-island.topLeft());
 		SectionWidget::PaintBackground(
 			q,
-			_session->currentChatTheme(),
+			_session->defaultChatTheme().get(),
 			_parent->size(),
 			island);
 	}

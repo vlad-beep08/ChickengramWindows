@@ -422,6 +422,7 @@ private:
 	QRect _thirdClosingRect;
 	std::unique_ptr<AyuDesign::IslandCorners> _mainCorners;
 	QRect _mainIsland;
+	std::shared_ptr<Ui::ChatTheme> _islandChatTheme;
 	object_ptr<Window::SectionWidget> _leftSection = { nullptr };
 	object_ptr<AyuDesign::LeftBoxHost> _leftBox = { nullptr };
 	std::unique_ptr<AyuDesign::IslandCorners> _leftCorners;

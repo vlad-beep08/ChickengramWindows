@@ -3027,25 +3027,29 @@ void MainWidget::setupIslands() {
 	crl::on_main(this, [] {
 		AyuDesign::EnsureWebTheme();
 	});
-	_controller->activeChatValue(
+	// WHY: the chat widget may still hold the previous chat's wallpaper when
+	// this fires, so the backdrop keeps the theme the stream itself resolved.
+	auto chatTheme = _controller->activeChatValue(
 	) | rpl::map([](Dialogs::Key key) {
 		const auto history = key.history();
 		return history ? history->peer.get() : nullptr;
-	}) | rpl::map([=](PeerData *peer) -> rpl::producer<> {
+	}) | rpl::map([=](PeerData *peer)
+	-> rpl::producer<std::shared_ptr<Ui::ChatTheme>> {
 		if (!peer) {
-			return rpl::single(rpl::empty) | rpl::then(
-				_controller->defaultChatTheme()->repaintBackgroundRequests()
-			);
+			return rpl::single(_controller->defaultChatTheme());
 		}
-		return Window::ChatThemeValueFromPeer(
-			_controller,
-			peer
-		) | rpl::map([](const std::shared_ptr<Ui::ChatTheme> &theme) {
-			return rpl::single(rpl::empty) | rpl::then(
-				theme->repaintBackgroundRequests()
-			);
-		}) | rpl::flatten_latest();
-	}) | rpl::flatten_latest() | rpl::on_next([=] {
+		return Window::ChatThemeValueFromPeer(_controller, peer);
+	}) | rpl::flatten_latest() | rpl::map([=](
+			const std::shared_ptr<Ui::ChatTheme> &theme) {
+		_islandChatTheme = theme;
+		return rpl::single(rpl::empty) | rpl::then(
+			theme->repaintBackgroundRequests()
+		);
+	}) | rpl::flatten_latest();
+	rpl::merge(
+		std::move(chatTheme),
+		_controller->defaultChatTheme()->repaintBackgroundRequests()
+	) | rpl::on_next([=] {
 		refreshIslandBackdrop();
 	}, lifetime());
 }
@@ -3077,15 +3081,35 @@ void MainWidget::updateIslands(int dialogsWidth) {
 
 void MainWidget::paintIslandBackdrop(QPainter &p, QRect clip) {
 	const auto canvas = parentWidget();
+	const auto canvasSize = canvas ? canvas->size() : size();
 	const auto shift = pos();
-	p.translate(-shift);
-	Window::SectionWidget::PaintBackground(
-		p,
-		_controller->currentChatTheme(),
-		canvas ? canvas->size() : size(),
-		clip.translated(shift),
-		_controller->isGifPausedAtLeastFor(Window::GifPauseReason::Any));
-	p.translate(shift);
+	const auto paused = _controller->isGifPausedAtLeastFor(
+		Window::GifPauseReason::Any);
+	const auto paint = [&](not_null<Ui::ChatTheme*> theme, QRect part) {
+		if (part.isEmpty()) {
+			return;
+		}
+		p.save();
+		p.setClipRect(part, Qt::IntersectClip);
+		p.translate(-shift);
+		Window::SectionWidget::PaintBackground(
+			p,
+			theme,
+			canvasSize,
+			part.translated(shift),
+			paused);
+		p.restore();
+	};
+	// A chat's own wallpaper stays inside the chat, the left side keeps the common one.
+	const auto split = std::clamp(_history->x(), 0, width());
+	paint(
+		_controller->defaultChatTheme().get(),
+		clip.intersected(QRect(0, 0, split, height())));
+	paint(
+		(_islandChatTheme
+			? _islandChatTheme.get()
+			: _controller->currentChatTheme().get()),
+		clip.intersected(QRect(split, 0, width() - split, height())));
 	AyuDesign::PaintIslandShadow(p, _dialogsIsland);
 	AyuDesign::PaintIslandShadow(p, _thirdIslandShown);
 	AyuDesign::PaintIslandShadow(p, _mainIsland);
