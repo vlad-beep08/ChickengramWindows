@@ -110,6 +110,9 @@ private:
 	Ui::Animations::Simple _scrollToAnimation;
 	QImage _webCache;
 	int _webCacheGeneration = -1;
+	const void *_webCacheTheme = nullptr;
+	qint64 _webCachePrepared = 0;
+	qint64 _webCacheGradient = 0;
 
 };
 

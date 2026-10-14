@@ -3027,11 +3027,11 @@ void MainWidget::setupIslands() {
 	crl::on_main(this, [] {
 		AyuDesign::EnsureWebTheme();
 	});
-	// WHY: the chat widget may still hold the previous chat's wallpaper when
-	// this fires, so the whole backdrop uses the theme the stream resolved.
+	// WHY: the chat widget swaps its theme a moment after the active chat
+	// changes, so the backdrop follows it once more after the chat caught up.
 	auto chatTheme = _controller->activeChatValue(
 	) | rpl::map([](Dialogs::Key key) {
-		const auto history = key.history();
+		const auto history = key.owningHistory();
 		return history ? history->peer.get() : nullptr;
 	}) | rpl::map([=](PeerData *peer)
 	-> rpl::producer<std::shared_ptr<Ui::ChatTheme>> {
@@ -3051,7 +3051,18 @@ void MainWidget::setupIslands() {
 		_controller->defaultChatTheme()->repaintBackgroundRequests()
 	) | rpl::on_next([=] {
 		refreshIslandBackdrop();
+		crl::on_main(this, [=] {
+			followIslandTheme();
+		});
 	}, lifetime());
+}
+
+void MainWidget::followIslandTheme() {
+	_islandThemeLifetime = islandChatTheme()->repaintBackgroundRequests(
+	) | rpl::on_next([=] {
+		refreshIslandBackdrop();
+	});
+	refreshIslandBackdrop();
 }
 
 void MainWidget::updateIslands(int dialogsWidth) {
@@ -3080,9 +3091,12 @@ void MainWidget::updateIslands(int dialogsWidth) {
 }
 
 not_null<Ui::ChatTheme*> MainWidget::islandChatTheme() const {
+	if (const auto custom = customChatTheme()) {
+		return custom;
+	}
 	return _islandChatTheme
 		? not_null<Ui::ChatTheme*>(_islandChatTheme.get())
-		: _controller->currentChatTheme();
+		: _controller->defaultChatTheme().get();
 }
 
 void MainWidget::paintIslandBackdrop(QPainter &p, QRect clip) {
@@ -3122,6 +3136,16 @@ void MainWidget::refreshIslandBackdrop() {
 	AyuDesign::BumpBackdropGeneration();
 	if (const auto canvas = parentWidget(); canvas && x() > 0) {
 		canvas->update(0, 0, x(), height());
+		const auto children = canvas->findChildren<QWidget*>(
+			QString(),
+			Qt::FindDirectChildrenOnly);
+		for (const auto child : children) {
+			if (child != this
+				&& child->isVisible()
+				&& child->x() + child->width() <= x()) {
+				child->update();
+			}
+		}
 	}
 	if (!_dialogsIsland.isEmpty()) {
 		const auto island = _dialogsIsland;

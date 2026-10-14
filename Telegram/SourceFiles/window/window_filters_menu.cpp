@@ -28,6 +28,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_premium_limits.h"
 #include "data/data_unread_value.h"
 #include "lang/lang_keys.h"
+#include "ui/chat/chat_theme.h"
 #include "ui/filter_icons.h"
 #include "ui/wrap/vertical_layout.h"
 #include "ui/wrap/vertical_layout_reorder.h"
@@ -292,6 +293,7 @@ QRect FiltersMenu::webIsland() const {
 }
 
 void FiltersMenu::paintWebBackground(QPainter &p, QRect clip) {
+	p.fillRect(clip, st::windowBg);
 	SectionWidget::PaintBackground(
 		p,
 		_session->content()->islandChatTheme(),
@@ -328,11 +330,21 @@ void FiltersMenu::paintWebBackground(QPainter &p, QRect clip) {
 void FiltersMenu::validateWebCache(QRect island) {
 	const auto ratio = style::DevicePixelRatio();
 	const auto generation = AyuDesign::BackdropGeneration();
+	const auto theme = _session->content()->islandChatTheme();
+	const auto &background = theme->background();
+	const auto prepared = background.prepared.cacheKey();
+	const auto gradient = background.gradientForFill.cacheKey();
 	if (_webCache.size() == island.size() * ratio
-		&& _webCacheGeneration == generation) {
+		&& _webCacheGeneration == generation
+		&& _webCacheTheme == theme.get()
+		&& _webCachePrepared == prepared
+		&& _webCacheGradient == gradient) {
 		return;
 	}
 	_webCacheGeneration = generation;
+	_webCacheTheme = theme.get();
+	_webCachePrepared = prepared;
+	_webCacheGradient = gradient;
 	auto image = QImage(
 		island.size() * ratio,
 		QImage::Format_ARGB32_Premultiplied);
@@ -343,7 +355,7 @@ void FiltersMenu::validateWebCache(QRect island) {
 		q.translate(-island.topLeft());
 		SectionWidget::PaintBackground(
 			q,
-			_session->content()->islandChatTheme(),
+			theme,
 			_parent->size(),
 			island);
 	}

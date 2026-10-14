@@ -328,6 +328,7 @@ private:
 	void updateIslands(int dialogsWidth);
 	void paintIslandBackdrop(QPainter &p, QRect clip);
 	void refreshIslandBackdrop();
+	void followIslandTheme();
 	void updateThirdIsland();
 	void updateMainIsland();
 	bool showInLeftSection(
@@ -424,6 +425,7 @@ private:
 	std::unique_ptr<AyuDesign::IslandCorners> _mainCorners;
 	QRect _mainIsland;
 	std::shared_ptr<Ui::ChatTheme> _islandChatTheme;
+	rpl::lifetime _islandThemeLifetime;
 	object_ptr<Window::SectionWidget> _leftSection = { nullptr };
 	object_ptr<AyuDesign::LeftBoxHost> _leftBox = { nullptr };
 	std::unique_ptr<AyuDesign::IslandCorners> _leftCorners;
