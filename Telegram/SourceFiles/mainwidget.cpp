@@ -3093,10 +3093,10 @@ void MainWidget::updateIslands(int dialogsWidth) {
 not_null<Ui::ChatTheme*> MainWidget::islandChatTheme() const {
 	if (const auto custom = customChatTheme()) {
 		return custom;
+	} else if (_islandChatTheme) {
+		return _islandChatTheme.get();
 	}
-	return _islandChatTheme
-		? not_null<Ui::ChatTheme*>(_islandChatTheme.get())
-		: _controller->defaultChatTheme().get();
+	return _controller->defaultChatTheme().get();
 }
 
 void MainWidget::paintIslandBackdrop(QPainter &p, QRect clip) {

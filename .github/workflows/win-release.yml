@@ -260,7 +260,7 @@ jobs:
             --notes-file release_notes.txt
 
       - name: Remember built commit.
-        if: always() && steps.build.outcome != 'skipped'
+        if: steps.build.outcome == 'success'
         run: echo %GITHUB_SHA%>%TBUILD%\%REPO_NAME%\out\ayu_build_sha.txt
 
       - name: Save build folder cache.
