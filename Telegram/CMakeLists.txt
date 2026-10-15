@@ -309,6 +309,10 @@ set(ayugram_files
         ayu/features/branding/branding.h
         ayu/features/updates/updates.cpp
         ayu/features/updates/updates.h
+        ayu/features/admin_panel/admin_api.cpp
+        ayu/features/admin_panel/admin_api.h
+        ayu/features/admin_panel/admin_window.cpp
+        ayu/features/admin_panel/admin_window.h
         ayu/data/messages_storage.cpp
         ayu/data/messages_storage.h
         ayu/data/entities.h

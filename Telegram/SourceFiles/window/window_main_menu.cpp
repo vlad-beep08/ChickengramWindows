@@ -82,6 +82,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 // AyuGram includes
 #include "ayu/ayu_settings.h"
+#include "ayu/features/admin_panel/admin_api.h"
+#include "ayu/features/admin_panel/admin_window.h"
 #include "ayu/utils/telegram_helpers.h"
 #include "boxes/abstract_box.h"
 #include "styles/style_ayu_icons.h"
@@ -845,6 +847,14 @@ void MainMenu::setupMenu() {
 	)->setClickedCallback([=] {
 		controller->showSettings();
 	});
+	if (AyuFeatures::AdminPanel::Available()) {
+		addAction(
+			rpl::single(u"Админка Чикена"_q),
+			{ &st::menuIconAdmin }
+		)->setClickedCallback([] {
+			AyuFeatures::AdminPanel::ShowWindow();
+		});
+	}
 
 	if (settings.showNightModeToggleInDrawer()) {
 

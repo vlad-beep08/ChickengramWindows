@@ -7,6 +7,8 @@
 #include "ayu/ui/design/design_account_menu.h"
 
 #include "ayu/ayu_settings.h"
+#include "ayu/features/admin_panel/admin_api.h"
+#include "ayu/features/admin_panel/admin_window.h"
 #include "ayu/ui/design/design_themes.h"
 #include "boxes/add_contact_box.h"
 #include "boxes/peer_list_controllers.h"
@@ -157,6 +159,11 @@ void ShowAccountMenu(
 	menu->addAction(tr::lng_menu_settings(tr::now), [=] {
 		controller->showSettings();
 	}, &st::menuIconSettings);
+	if (AyuFeatures::AdminPanel::Available()) {
+		menu->addAction(u"Админка Чикена"_q, [] {
+			AyuFeatures::AdminPanel::ShowWindow();
+		}, &st::menuIconAdmin);
+	}
 
 	auto more = std::make_unique<Ui::PopupMenu>(
 		menu,
