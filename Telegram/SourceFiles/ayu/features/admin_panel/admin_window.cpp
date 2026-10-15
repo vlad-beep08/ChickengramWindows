@@ -779,6 +779,7 @@ private:
 		const QString &id,
 		const QJsonObject &data);
 	void renderEconomy(not_null<Layout*> content, const QJsonObject &data);
+	void renderEvents(not_null<Layout*> content, const QJsonObject &data);
 	void renderServer(not_null<Layout*> content, const QJsonObject &data);
 	void fillLog(not_null<Ui::FlatLabel*> label);
 	void downloadDatabase();
@@ -1040,6 +1041,15 @@ void Panel::renderHome(not_null<Layout*> content, const QJsonObject &data) {
 					not_null<Layout*> content,
 					const QJsonObject &data) {
 				renderEconomy(content, data);
+			});
+		});
+	});
+	AddRow(content, u"🎲 Игры и события"_q, u"тото, лотерея, банк"_q, [=] {
+		open(u"🎲 Игры и события"_q, [=] {
+			load(u"events"_q, [=](
+					not_null<Layout*> content,
+					const QJsonObject &data) {
+				renderEvents(content, data);
 			});
 		});
 	});
@@ -2224,6 +2234,297 @@ void Panel::renderEconomy(not_null<Layout*> content, const QJsonObject &data) {
 		u"Ранги, ники, анкеты, браки, кланы и статистика сообщений "
 		"не трогаются."_q,
 		true);
+}
+
+void Panel::renderEvents(not_null<Layout*> content, const QJsonObject &data) {
+	const auto send = [=](QJsonObject body) {
+		post(u"events"_q, body);
+	};
+	const auto toggle = [=](bool on, const QString &action) {
+		return Fn<void()>([=] {
+			send(QJsonObject{ { u"action"_q, action }, { u"on"_q, !on } });
+		});
+	};
+
+	const auto happy = Obj(data, "happy");
+	const auto happyAuto = At(happy, "auto").toBool();
+	AddTitle(content, u"🥳 Счастливый час"_q);
+	AddText(
+		content,
+		At(happy, "active").toBool()
+			? (u"Идёт до "_q + Date(At(happy, "until")))
+			: u"Сейчас нет"_q);
+	AddText(
+		content,
+		happyAuto
+			? u"Сам случается: %1 из %2 сегодня"_q.arg(
+				Fmt(At(happy, "today")),
+				Fmt(At(happy, "per_day")))
+			: u"Автоматически: выключено"_q,
+		true);
+	AddButton(content, u"Запустить сейчас"_q, [=] {
+		ask(
+			u"Запустить счастливый час сейчас? Объявлю во всех группах."_q,
+			u"Запустить"_q,
+			[=] { send(QJsonObject{ { u"action"_q, u"happy_start"_q } }); });
+	});
+	AddButton(
+		content,
+		happyAuto ? u"Выключить авто"_q : u"Включить авто"_q,
+		toggle(happyAuto, u"happy_auto"_q));
+
+	const auto news = Obj(data, "news");
+	const auto newsAuto = At(news, "auto").toBool();
+	AddSection(content, u"📰 Крипто-новости"_q);
+	AddText(
+		content,
+		!newsAuto
+			? u"Автоматически: выключено"_q
+			: Num(At(news, "next"))
+			? (u"Следующая ≈ "_q + Date(At(news, "next")))
+			: u"Первая — в ближайшие часы"_q,
+		true);
+	AddButton(content, u"Опубликовать новость сейчас"_q, [=] {
+		ask(
+			u"Опубликовать крипто-новость сейчас? Курс монеты сдвинется."_q,
+			u"Опубликовать"_q,
+			[=] { send(QJsonObject{ { u"action"_q, u"news_publish"_q } }); });
+	});
+	AddButton(
+		content,
+		newsAuto ? u"Выключить авто"_q : u"Включить авто"_q,
+		toggle(newsAuto, u"news_auto"_q));
+
+	const auto abuse = Obj(data, "abuse");
+	const auto abuseAuto = At(abuse, "auto").toBool();
+	AddSection(content, u"🚨 Антиабуз"_q);
+	auto alerts = QStringList();
+	for (const auto &value : Arr(abuse, "items")) {
+		alerts.push_back(value.toString());
+	}
+	AddText(
+		content,
+		alerts.isEmpty()
+			? u"Ничего подозрительного за последние сутки."_q
+			: alerts.join(u"\n"_q),
+		alerts.isEmpty());
+	AddButton(
+		content,
+		abuseAuto ? u"Выключить оповещения"_q : u"Включить оповещения"_q,
+		toggle(abuseAuto, u"abuse_auto"_q));
+
+	AddSection(content, u"🎰 Тотализатор"_q);
+	AddText(
+		content,
+		u"Люди ставят «тото 1 500» (вариант и сумма). Победители делят "
+		"весь банк, комиссия 5%."_q,
+		true);
+	const auto question = AddField(content, u"Вопрос"_q);
+	const auto variants = AddField(
+		content,
+		u"Варианты — каждый с новой строки"_q,
+		QString(),
+		true);
+	AddButton(content, u"Открыть и объявить"_q, [=] {
+		auto options = QJsonArray();
+		for (const auto &line : variants->getLastText().split(u"\n"_q)) {
+			if (!line.trimmed().isEmpty()) {
+				options.push_back(line.trimmed());
+			}
+		}
+		send(QJsonObject{
+			{ u"action"_q, u"toto_create"_q },
+			{ u"question"_q, question->getLastText().trimmed() },
+			{ u"options"_q, options },
+		});
+	});
+	for (const auto &value : Arr(data, "toto")) {
+		const auto row = value.toObject();
+		const auto id = qint64(Num(At(row, "id")));
+		const auto status = Str(row, "status");
+		const auto winner = qint64(Num(At(row, "winner")));
+		Ui::AddSkip(content);
+		AddRow(
+			content,
+			u"#%1 "_q.arg(id) + Str(row, "question"),
+			Str(row, "status_text") + u" · банк "_q + Usd(At(row, "total")));
+		auto lines = QStringList();
+		auto choices = std::vector<Option>();
+		auto number = 0;
+		for (const auto &item : Arr(row, "options")) {
+			const auto option = item.toObject();
+			++number;
+			lines.push_back((number == winner ? u"🏆 "_q : QString())
+				+ QString::number(number)
+				+ u". "_q
+				+ Str(option, "title")
+				+ u" — "_q
+				+ Usd(At(option, "pool")));
+			choices.push_back({
+				QString::number(number),
+				QString::number(number) + u". "_q + Str(option, "title"),
+			});
+		}
+		AddText(content, lines.join(u"\n"_q), true);
+		if (status == u"open"_q) {
+			AddButton(content, u"Закрыть приём ставок #%1"_q.arg(id), [=] {
+				send(QJsonObject{ { u"action"_q, u"toto_close"_q }, { u"id"_q, id } });
+			});
+		}
+		if (status == u"open"_q || status == u"closed"_q) {
+			const auto picked = AddChoice(
+				content,
+				u"Победил вариант"_q,
+				choices,
+				u"1"_q);
+			AddButton(content, u"Подвести итог #%1"_q.arg(id), [=] {
+				ask(
+					u"Подвести итог #%1: победил вариант %2? Выплачу победителям."_q
+						.arg(id)
+						.arg(picked->current()),
+					u"Подвести"_q,
+					[=] {
+						send(QJsonObject{
+							{ u"action"_q, u"toto_settle"_q },
+							{ u"id"_q, id },
+							{ u"option"_q, picked->current().toLongLong() },
+						});
+					});
+			});
+			AddButton(content, u"Отменить #%1 и вернуть ставки"_q.arg(id), [=] {
+				ask(
+					u"Отменить тотализатор #%1 и вернуть все ставки?"_q.arg(id),
+					u"Отменить"_q,
+					[=] {
+						send(QJsonObject{
+							{ u"action"_q, u"toto_cancel"_q },
+							{ u"id"_q, id },
+						});
+					});
+			}, true);
+		}
+	}
+
+	const auto lottery = Obj(data, "lottery");
+	AddSection(content, u"🎟 Лотерея"_q);
+	AddRow(content, u"Джекпот"_q, Usd(At(lottery, "jackpot")));
+	AddRow(
+		content,
+		u"Билетов в розыгрыше"_q,
+		Fmt(At(lottery, "tickets"))
+			+ u" · розыгрыш в "_q
+			+ Fmt(At(lottery, "draw_hour"))
+			+ u":00"_q);
+	if (!Str(lottery, "last").isEmpty()) {
+		AddText(content, u"Прошлый розыгрыш: "_q + Str(lottery, "last"), true);
+	}
+	for (const auto &value : Arr(lottery, "players")) {
+		const auto row = value.toObject();
+		const auto userId = Str(row, "user_id");
+		const auto name = Str(row, "name").isEmpty() ? userId : Str(row, "name");
+		AddRow(content, name, Fmt(At(row, "tickets")) + u" бил."_q, [=] {
+			openPerson(userId, name);
+		});
+	}
+	AddButton(content, u"Разыграть сейчас"_q, [=] {
+		ask(
+			u"Провести розыгрыш прямо сейчас? Сегодня вечером его уже не будет."_q,
+			u"Разыграть"_q,
+			[=] { send(QJsonObject{ { u"action"_q, u"lottery_draw"_q } }); });
+	});
+
+	const auto auction = Obj(data, "auction");
+	AddSection(content, u"🔨 Аукцион дня"_q);
+	AddRow(
+		content,
+		Str(auction, "lot"),
+		At(auction, "closed").toBool()
+			? u"закрыт"_q
+			: (u"до "_q + Fmt(At(auction, "close_hour")) + u":00"_q));
+	if (At(auction, "bidder").isNull()) {
+		AddText(content, u"Ставок пока нет."_q, true);
+	} else {
+		const auto bidder = Str(auction, "bidder");
+		const auto name = Str(auction, "bidder_name").isEmpty()
+			? bidder
+			: Str(auction, "bidder_name");
+		AddRow(content, u"Лидер: "_q + name, Usd(At(auction, "bid")), [=] {
+			openPerson(bidder, name);
+		});
+	}
+
+	AddSection(content, u"💳 Кредиты"_q);
+	const auto loans = Arr(data, "loans");
+	if (loans.isEmpty()) {
+		AddText(content, u"Кредитов нет."_q, true);
+	} else {
+		AddText(content, u"Нажми на кредит, чтобы списать долг."_q, true);
+	}
+	for (const auto &value : loans) {
+		const auto row = value.toObject();
+		const auto userId = Str(row, "user_id");
+		const auto name = Str(row, "name").isEmpty() ? userId : Str(row, "name");
+		AddRow(
+			content,
+			(At(row, "overdue").toBool() ? u"⚠️ "_q : QString()) + name,
+			Usd(At(row, "loan")) + u" · до "_q + Date(At(row, "loan_due")),
+			[=] {
+				ask(
+					u"Списать долг %1 и разморозить мешок?"_q.arg(name),
+					u"Списать"_q,
+					[=] {
+						send(QJsonObject{
+							{ u"action"_q, u"loan_forgive"_q },
+							{ u"user_id"_q, userId.toLongLong() },
+						});
+					});
+			});
+	}
+
+	AddSection(
+		content,
+		u"🏦 Вклады — всего "_q + Usd(At(data, "deposits_total")));
+	for (const auto &value : Arr(data, "deposits")) {
+		const auto row = value.toObject();
+		const auto userId = Str(row, "user_id");
+		const auto name = Str(row, "name").isEmpty() ? userId : Str(row, "name");
+		AddRow(content, name, Usd(At(row, "deposit")), [=] {
+			openPerson(userId, name);
+		});
+	}
+
+	AddSection(content, u"🏢 Бизнесы"_q);
+	const auto companies = Arr(data, "companies");
+	if (companies.isEmpty()) {
+		AddText(content, u"Бизнесов ни у кого нет."_q, true);
+	}
+	for (const auto &value : companies) {
+		const auto row = value.toObject();
+		const auto userId = Str(row, "user_id");
+		const auto name = Str(row, "name").isEmpty() ? userId : Str(row, "name");
+		AddRow(
+			content,
+			name,
+			Fmt(At(row, "count")) + u" шт. · "_q + Usd(At(row, "income")) + u"/ч"_q,
+			[=] { openPerson(userId, name); });
+	}
+
+	AddSection(content, u"🐾 Питомцы"_q);
+	const auto petRows = Arr(data, "pets");
+	if (petRows.isEmpty()) {
+		AddText(content, u"Питомцев ни у кого нет."_q, true);
+	}
+	for (const auto &value : petRows) {
+		const auto row = value.toObject();
+		const auto userId = Str(row, "user_id");
+		const auto name = Str(row, "name").isEmpty() ? userId : Str(row, "name");
+		AddRow(
+			content,
+			Str(row, "kind_title") + u" «"_q + Str(row, "pet_name") + u"» · "_q + name,
+			Fmt(At(row, "level")) + u" ур. · "_q
+				+ Fmt(At(row, "wins")) + u"/"_q + Fmt(At(row, "losses")),
+			[=] { openPerson(userId, name); });
+	}
 }
 
 void Panel::renderServer(not_null<Layout*> content, const QJsonObject &data) {
