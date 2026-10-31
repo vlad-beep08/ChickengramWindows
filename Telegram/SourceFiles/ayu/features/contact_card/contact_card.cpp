@@ -15,6 +15,7 @@
 #include "core/application.h"
 #include "data/data_birthday.h"
 #include "data/data_peer.h"
+#include "data/data_session.h"
 #include "data/data_user.h"
 #include "history/history.h"
 #include "main/main_account.h"
