@@ -345,7 +345,7 @@ void FillBox(
 		return h->chatListTimeId();
 	});
 	if (int(state->queue.size()) > kChannels) {
-		state->queue.resize(kChannels);
+		state->queue.erase(state->queue.begin() + kChannels, state->queue.end());
 	}
 	ranges::reverse(state->queue);
 	state->total = int(state->queue.size());
@@ -390,11 +390,7 @@ void FillBox(
 } // namespace
 
 void Show(not_null<Window::SessionController*> controller) {
-	if (const auto content = controller->content()) {
-		content->showLeftBox(Box(FillBox, controller));
-	} else {
-		controller->show(Box(FillBox, controller));
-	}
+	controller->content()->showLeftBox(Box(FillBox, controller));
 }
 
 } // namespace AyuFeatures::ChannelFeed
