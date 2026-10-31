@@ -11,6 +11,7 @@
         <file alias="chickengram/fonts/ChickengramSans-Regular.ttf">../../chickengram/fonts/ChickengramSans-Regular.ttf</file>
         <file alias="chickengram/fonts/ChickengramSans-Bold.ttf">../../chickengram/fonts/ChickengramSans-Bold.ttf</file>
         <file alias="chickengram/themes/web-dark-orange.tdesktop-theme">../../chickengram/themes/web-dark-orange.tdesktop-theme</file>
+        <file alias="chickengram/themes/collage.tdesktop-theme">../../chickengram/themes/collage.tdesktop-theme</file>
         <file alias="art/ayu/default/app.png">../../art/ayu/default/app.png</file>
         <file alias="art/ayu/default/app.svg">../../art/ayu/default/app.svg</file>
         <file alias="art/ayu/default/app_icon.ico">../../art/ayu/default/app_icon.ico</file>

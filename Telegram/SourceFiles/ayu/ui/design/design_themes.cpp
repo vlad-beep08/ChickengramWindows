@@ -185,6 +185,26 @@ bool ApplyThemeFile(const ThemeInfo &theme) {
 	return u"web-dark-orange"_q;
 }
 
+[[nodiscard]] QString CollageThemeId() {
+	return u"collage"_q;
+}
+
+[[nodiscard]] std::optional<ThemeInfo> FindTheme(const QString &id) {
+	for (const auto &theme : Themes()) {
+		if (theme.id == id) {
+			return theme;
+		}
+	}
+	return std::nullopt;
+}
+
+[[nodiscard]] ThemeInfo ChosenTheme() {
+	if (const auto theme = FindTheme(CurrentThemeId())) {
+		return *theme;
+	}
+	return *FindTheme(OurThemeId());
+}
+
 void ApplyWallPaper(const ThemeInfo &theme) {
 	if (theme.wallpaper.empty()) {
 		return;
@@ -207,6 +227,12 @@ std::vector<ThemeInfo> Themes() {
 			.wallpaper = { QColor(0x4f, 0x5b, 0xd5), QColor(0x96, 0x2f, 0xbf), QColor(0xdd, 0x6c, 0xb9), QColor(0xfe, 0xc4, 0x96) },
 			.wallpaperIntensity = -kWebWallPaperIntensity,
 		},
+		{
+			.id = CollageThemeId(),
+			.title = u"Коллаж"_q,
+			.path = ThemePath(CollageThemeId()),
+			.swatches = { QColor(0x08, 0x08, 0x08), QColor(0xc1, 0x12, 0x1f), QColor(0xe8, 0xe1, 0xd1) },
+		},
 	};
 }
 
@@ -215,18 +241,13 @@ QString CurrentThemeId() {
 }
 
 bool ApplyTheme(const QString &id) {
-	for (const auto &theme : Themes()) {
-		if (theme.id != id) {
-			continue;
-		}
-		if (!ApplyThemeFile(theme)) {
-			return false;
-		}
-		ApplyWallPaper(theme);
-		AyuSettings::getInstance().setDesignTheme(id);
-		return true;
+	const auto theme = FindTheme(id);
+	if (!theme || !ApplyThemeFile(*theme)) {
+		return false;
 	}
-	return false;
+	ApplyWallPaper(*theme);
+	AyuSettings::getInstance().setDesignTheme(id);
+	return true;
 }
 
 std::vector<AccentInfo> Accents() {
@@ -248,15 +269,11 @@ QString CurrentAccentId() {
 
 bool ApplyAccent(const QString &id) {
 	AyuSettings::getInstance().setDesignAccent(id);
-	if (CurrentThemeId() != OurThemeId()) {
-		return ApplyTheme(OurThemeId());
+	const auto theme = ChosenTheme();
+	if (CurrentThemeId() != theme.id) {
+		return ApplyTheme(theme.id);
 	}
-	for (const auto &theme : Themes()) {
-		if (theme.id == OurThemeId()) {
-			return ApplyThemeFile(theme);
-		}
-	}
-	return false;
+	return ApplyThemeFile(theme);
 }
 
 void EnsureWebWallPaper() {
@@ -272,12 +289,7 @@ void EnsureWebWallPaper() {
 		return;
 	}
 	lastApplied = now;
-	for (const auto &theme : Themes()) {
-		if (theme.id == OurThemeId()) {
-			ApplyWallPaper(theme);
-			return;
-		}
-	}
+	ApplyWallPaper(ChosenTheme());
 }
 
 void EnsureWebTheme() {
@@ -301,8 +313,9 @@ void EnsureWebTheme() {
 		}, *lifetime);
 	}
 	const auto light = (st::windowBg->c.lightness() >= kDarkLightness);
-	if (CurrentThemeId() != OurThemeId() || light) {
-		ApplyTheme(OurThemeId());
+	const auto theme = ChosenTheme();
+	if (CurrentThemeId() != theme.id || light) {
+		ApplyTheme(theme.id);
 		return;
 	}
 	EnsureWebWallPaper();

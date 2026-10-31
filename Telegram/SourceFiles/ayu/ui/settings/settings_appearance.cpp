@@ -64,6 +64,29 @@ void BuildDesign(SectionBuilder &builder, AyuSectionBuilder &ayu) {
 		.keywords = { u"theme"_q, u"design"_q },
 	});
 
+	const auto themes = AyuDesign::Themes();
+	auto themeTitles = std::vector<QString>();
+	auto themeSelection = 0;
+	for (const auto &theme : themes) {
+		if (theme.id == AyuDesign::CurrentThemeId()) {
+			themeSelection = int(themeTitles.size());
+		}
+		themeTitles.push_back(theme.title);
+	}
+	ayu.addChooseButton({
+		.id = u"ayu/designTheme"_q,
+		.title = rpl::single(u"Тема оформления"_q),
+		.boxTitle = rpl::single(u"Тема оформления"_q),
+		.initialSelection = themeSelection,
+		.options = std::move(themeTitles),
+		.setter = [=](int index) {
+			if (index >= 0 && index < int(themes.size())) {
+				AyuDesign::ApplyTheme(themes[index].id);
+			}
+		},
+		.keywords = { u"theme"_q, u"collage"_q, u"коллаж"_q },
+	});
+
 	const auto accents = AyuDesign::Accents();
 	auto accentTitles = std::vector<QString>();
 	auto accentSelection = 0;
