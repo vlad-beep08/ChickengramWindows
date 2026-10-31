@@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ayu/features/forward/ayu_forward.h"
 #include "ayu/features/drafts_history/drafts_history.h"
 #include "ayu/features/watermark/watermark.h"
+#include "ayu/features/ink/ink.h"
 #include "ayu/features/contact_card/contact_card.h"
 #include "ayu/features/self_destruct/self_destruct.h"
 
@@ -4815,6 +4816,13 @@ void ApiWrap::sendMessage(
 	}
 	local().saveRecentSentHashtags(textWithTags.text);
 	AyuFeatures::DraftsHistory::Forget(history, textWithTags.text);
+	if (const auto secret = AyuFeatures::Ink::Take(); !secret.isEmpty()) {
+		if (!AyuFeatures::Ink::Apply(textWithTags, secret)) {
+			if (const auto window = _session->tryResolveWindow()) {
+				window->showToast(u"Невидимые чернила не поместились в сообщение."_q);
+			}
+		}
+	}
 	if (message.action.options.ayuWatermark) {
 		AyuFeatures::Watermark::Apply(textWithTags, peer->id);
 	}

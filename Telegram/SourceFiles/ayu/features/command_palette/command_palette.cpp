@@ -8,7 +8,9 @@
 
 #include "lang_auto.h"
 #include "ayu/ayu_settings.h"
+#include "ayu/features/ai/ai.h"
 #include "ayu/features/bookmarks/bookmarks.h"
+#include "ayu/features/channel_feed/channel_feed.h"
 #include "ayu/features/contact_card/contact_card.h"
 #include "ayu/features/data_transfer/data_transfer.h"
 #include "ayu/features/drafts_history/drafts_history.h"
@@ -194,6 +196,12 @@ struct Command {
 	}, u"Ctrl+Shift+H"_q);
 	add(tr::ayu_KeywordAlertsTitle(tr::now), [=] {
 		KeywordAlerts::ShowEditBox(controller);
+	});
+	add(u"Лента каналов"_q, [=] {
+		ChannelFeed::Show(controller);
+	});
+	add(u"ИИ: ключ и сервис"_q, [=] {
+		Ai::ShowSettings(controller->uiShow());
 	});
 	add(tr::ayu_DataExport(tr::now), [=] {
 		DataTransfer::Export(controller);

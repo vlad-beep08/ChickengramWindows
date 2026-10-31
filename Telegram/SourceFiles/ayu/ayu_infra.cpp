@@ -11,6 +11,7 @@
 #include "ayu/ayu_ui_settings.h"
 #include "ayu/ayu_worker.h"
 #include "ayu/data/ayu_database.h"
+#include "ayu/features/contact_card/contact_card.h"
 #include "ayu/features/reminders/reminders.h"
 #include "ayu/features/updates/updates.h"
 #include "ayu/ui/ayu_logo.h"
@@ -83,6 +84,7 @@ void init() {
 	initTranslator();
 	initReminders();
 	AyuFeatures::Updates::Start();
+	AyuFeatures::ContactCard::StartBirthdayReminders();
 }
 
 }

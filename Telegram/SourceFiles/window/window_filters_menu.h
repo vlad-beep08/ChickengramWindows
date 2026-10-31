@@ -88,6 +88,7 @@ private:
 	std::unique_ptr<Ui::VerticalLayoutReorder> _reorder;
 	base::unique_qptr<Ui::SideBarButton> _saved;
 	base::unique_qptr<Ui::SideBarButton> _bookmarks;
+	base::unique_qptr<Ui::SideBarButton> _feed;
 	base::unique_qptr<Ui::SideBarButton> _setup;
 	base::unique_qptr<Ui::SideBarButton> _sections;
 	base::unique_qptr<Ui::SlideWrap<FolderFavoriteButton>> _favorite;

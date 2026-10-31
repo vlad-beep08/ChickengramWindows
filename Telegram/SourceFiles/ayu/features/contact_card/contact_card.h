@@ -19,5 +19,6 @@ void RememberSent(not_null<History*> history);
 void Show(
 	not_null<Window::SessionController*> controller,
 	not_null<PeerData*> peer);
+void StartBirthdayReminders();
 
 } // namespace AyuFeatures::ContactCard

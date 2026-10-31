@@ -5,6 +5,7 @@
 //
 // Copyright @Radolyn, 2026
 #include "ayu/ui/settings/settings_main.h"
+#include "ayu/features/ai/ai.h"
 #include "ayu/features/branding/branding.h"
 #include "ayu/features/updates/updates.h"
 
@@ -140,6 +141,20 @@ void BuildUpdates(SectionBuilder &builder) {
 			}
 		},
 		.keywords = { u"update"_q, u"обновление"_q },
+	});
+	builder.addButton({
+		.id = u"ayu/aiSettings"_q,
+		.title = rpl::single(u"ИИ: ключ и сервис"_q),
+		.icon = { &st::menuIconBot },
+		.label = rpl::single(AyuFeatures::Ai::Ready()
+			? AyuFeatures::Ai::ProviderName(AyuFeatures::Ai::Current().provider)
+			: u"не настроен"_q),
+		.onClick = [=] {
+			if (controller) {
+				AyuFeatures::Ai::ShowSettings(controller->uiShow());
+			}
+		},
+		.keywords = { u"ai"_q, u"ии"_q, u"groq"_q, u"ключ"_q },
 	});
 }
 

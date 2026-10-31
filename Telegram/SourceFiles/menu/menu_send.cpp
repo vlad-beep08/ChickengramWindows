@@ -65,6 +65,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 // AyuGram includes
 #include "ayu/ayu_settings.h"
 #include "ayu/features/self_destruct/self_destruct.h"
+#include "ayu/features/ink/ink.h"
 
 
 namespace SendMenu {
@@ -772,6 +773,17 @@ FillMenuResult FillSendMenu(
 				action({ Api::SendOptions{ .ayuWatermark = true } }, details);
 			},
 			&st::menuIconLock);
+		if (maybeShow) {
+			menu->addAction(
+				QString::fromUtf8("\xF0\x9F\xAB\xA5 ") + u"Невидимые чернила…"_q,
+				[=] {
+					AyuFeatures::Ink::AskSecret(maybeShow, [=](QString secret) {
+						AyuFeatures::Ink::Arm(secret);
+						action({ Api::SendOptions() }, details);
+					});
+				},
+				&st::menuIconSpoiler);
+		}
 		const auto seconds = AyuSettings::getInstance().selfDestructSeconds();
 		menu->addAction(
 			tr::ayu_SendSelfDestruct(

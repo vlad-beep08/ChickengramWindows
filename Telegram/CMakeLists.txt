@@ -293,6 +293,12 @@ set(ayugram_files
         ayu/features/keyword_alerts/keyword_alerts.h
         ayu/features/self_destruct/self_destruct.cpp
         ayu/features/self_destruct/self_destruct.h
+        ayu/features/ai/ai.cpp
+        ayu/features/ai/ai.h
+        ayu/features/ink/ink.cpp
+        ayu/features/ink/ink.h
+        ayu/features/channel_feed/channel_feed.cpp
+        ayu/features/channel_feed/channel_feed.h
         ayu/features/ocr/ocr.cpp
         ayu/features/ocr/ocr.h
         ayu/features/contact_card/contact_card.cpp

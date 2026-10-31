@@ -55,6 +55,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 // AyuGram includes
 #include "ayu/ayu_settings.h"
 #include "ayu/features/bookmarks/bookmarks.h"
+#include "ayu/features/channel_feed/channel_feed.h"
 #include "ayu/ui/design/design_account_menu.h"
 #include "ayu/ui/design/design_sections.h"
 #include "ayu/ui/design/design_system.h"
@@ -580,6 +581,7 @@ void FiltersMenu::refresh() {
 void FiltersMenu::setupTools() {
 	_saved = nullptr;
 	_bookmarks = nullptr;
+	_feed = nullptr;
 	_setup = nullptr;
 	if (AyuDesign::WebLayout()
 		&& AyuSettings::getInstance().designSidebarTools()) {
@@ -600,6 +602,14 @@ void FiltersMenu::setupTools() {
 			Ui::FilterIcon::Book);
 		_bookmarks->setClickedCallback([=] {
 			AyuFeatures::Bookmarks::ShowBox(_session);
+		});
+		_feed = prepareButton(
+			_container,
+			-1,
+			{ TextWithEntities{ u"Лента"_q } },
+			Ui::FilterIcon::Channels);
+		_feed->setClickedCallback([=] {
+			AyuFeatures::ChannelFeed::Show(_session);
 		});
 	}
 	_setup = prepareButton(
