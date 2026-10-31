@@ -351,18 +351,22 @@ void FiltersMenu::validateWebCache(QRect island) {
 		QImage::Format_ARGB32_Premultiplied);
 	image.setDevicePixelRatio(ratio);
 	image.fill(Qt::black);
-	{
-		auto q = QPainter(&image);
-		q.translate(-island.topLeft());
-		SectionWidget::PaintBackground(
-			q,
-			theme,
-			_parent->size(),
-			island);
+	if (AyuDesign::CollageMode()) {
+		image.fill(st::sideBarBg->c);
+	} else {
+		{
+			auto q = QPainter(&image);
+			q.translate(-island.topLeft());
+			SectionWidget::PaintBackground(
+				q,
+				theme,
+				_parent->size(),
+				island);
+		}
+		image = Images::BlurLargeImage(
+			std::move(image),
+			AyuDesign::WebBlurRadius() * ratio);
 	}
-	image = Images::BlurLargeImage(
-		std::move(image),
-		AyuDesign::WebBlurRadius() * ratio);
 	image.setDevicePixelRatio(ratio);
 	{
 		auto q = QPainter(&image);

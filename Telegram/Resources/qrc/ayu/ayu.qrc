@@ -10,6 +10,10 @@
         <file alias="art/ayu/chibi2/app_icon.ico">../../art/ayu/chibi2/app_icon.ico</file>
         <file alias="chickengram/fonts/ChickengramSans-Regular.ttf">../../chickengram/fonts/ChickengramSans-Regular.ttf</file>
         <file alias="chickengram/fonts/ChickengramSans-Bold.ttf">../../chickengram/fonts/ChickengramSans-Bold.ttf</file>
+        <file alias="chickengram/fonts/collage/Oswald-Bold.ttf">../../chickengram/fonts/collage/Oswald-Bold.ttf</file>
+        <file alias="chickengram/fonts/collage/PTSerif-Regular.ttf">../../chickengram/fonts/collage/PTSerif-Regular.ttf</file>
+        <file alias="chickengram/fonts/collage/PTSerif-Bold.ttf">../../chickengram/fonts/collage/PTSerif-Bold.ttf</file>
+        <file alias="chickengram/fonts/collage/PTMono-Regular.ttf">../../chickengram/fonts/collage/PTMono-Regular.ttf</file>
         <file alias="chickengram/themes/web-dark-orange.tdesktop-theme">../../chickengram/themes/web-dark-orange.tdesktop-theme</file>
         <file alias="chickengram/themes/collage.tdesktop-theme">../../chickengram/themes/collage.tdesktop-theme</file>
         <file alias="art/ayu/default/app.png">../../art/ayu/default/app.png</file>

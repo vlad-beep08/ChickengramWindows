@@ -78,6 +78,14 @@ constexpr auto kWebTabInset = 3;
 constexpr auto kWebUnreadHeight = 22;
 constexpr auto kWebUnreadFontSize = 14;
 constexpr auto kWebTabActiveAlpha = 0.14;
+constexpr auto kCollageRadius = 2;
+constexpr auto kCollageBubbleRadius = 3;
+constexpr auto kCollageBorder = 2;
+constexpr auto kCollageShadowOffset = 4;
+constexpr auto kCollageTitleFontSize = 18;
+constexpr auto kCollageSubsectionFontSize = 15;
+constexpr auto kCollageMonoFontSize = 12;
+constexpr auto kCollageServiceFontSize = 13;
 
 auto ForcedFamily = QString();
 auto BackdropGenerationValue = 0;
@@ -261,6 +269,53 @@ void ApplyWebLayout() {
 		st::msgDateFont->family());
 }
 
+void ApplyCollage() {
+	if (!CollageMode()) {
+		return;
+	}
+	const auto radius = Scaled(kCollageRadius);
+	Mutable(st::roundRadiusSmall) = radius;
+	Mutable(st::roundRadiusLarge) = radius;
+	Mutable(st::buttonRadius) = radius;
+	Mutable(st::boxRadius) = radius;
+	Mutable(st::defaultPopupMenu).radius = radius;
+	Mutable(st::popupMenuWithIcons).radius = radius;
+	Mutable(st::defaultImportantTooltip).radius = radius;
+	Mutable(st::dialogsFilter).borderRadius = radius;
+	Mutable(st::defaultComposeControls).radius = radius;
+	Mutable(st::bubbleRadiusLarge) = Scaled(kCollageBubbleRadius);
+	Mutable(st::bubbleRadiusSmall) = radius;
+	Ui::SetAppliedBubbleRadius(kCollageBubbleRadius);
+	for (const auto tabs : { &st::dialogsSearchTabs, &st::chatsFiltersTabs }) {
+		Mutable(*tabs).barRadius = 0;
+	}
+	for (const auto scroll : {
+			&st::defaultScrollArea,
+			&st::defaultSolidScroll,
+			&st::boxScroll,
+			&st::historyScroll }) {
+		Mutable(*scroll).round = 0;
+	}
+
+	const auto mono = [](int size) {
+		return style::font(Scaled(size), style::FontFlags(), CollageMonoFamily());
+	};
+	Mutable(st::msgDateFont) = mono(kCollageMonoFontSize);
+	Mutable(st::dialogsDateFont) = mono(kCollageMonoFontSize);
+	Mutable(st::dialogsUnreadFont) = mono(kWebUnreadFontSize);
+	Mutable(st::msgServiceFont) = mono(kCollageServiceFontSize);
+
+	const auto headline = [](int size) {
+		return style::font(
+			Scaled(size),
+			style::FontFlag::Bold,
+			CollageHeadlineFamily());
+	};
+	Mutable(st::boxTitle).style.font = headline(kCollageTitleFontSize);
+	Mutable(st::defaultSubsectionTitle).style.font = headline(
+		kCollageSubsectionFontSize);
+}
+
 void ApplyCorners() {
 	const auto corners = CurrentCorners();
 	if (corners == Corners::Telegram) {
@@ -309,7 +364,7 @@ int IslandMargin() {
 }
 
 int IslandRadius() {
-	return Scaled(kIslandRadius);
+	return Scaled(CollageMode() ? kCollageRadius : kIslandRadius);
 }
 
 int WebRowInset() {
@@ -317,7 +372,7 @@ int WebRowInset() {
 }
 
 int WebRowRadius() {
-	return Scaled(kWebRowRadius);
+	return Scaled(CollageMode() ? kCollageRadius : kWebRowRadius);
 }
 
 int WebColumnWidth(int available) {
@@ -343,7 +398,7 @@ int WebComposerGap() {
 }
 
 int WebComposerRadius() {
-	return Scaled(kWebComposerRadius);
+	return Scaled(CollageMode() ? kCollageRadius : kWebComposerRadius);
 }
 
 QRect WebFiltersIsland(QSize column) {
@@ -368,7 +423,33 @@ int WebCardMargin() {
 }
 
 int WebCardRadius() {
-	return Scaled(kWebCardRadius);
+	return Scaled(CollageMode() ? kCollageRadius : kWebCardRadius);
+}
+
+bool CollageMode() {
+	static const auto result = (AyuSettings::getInstance().designTheme()
+		== u"collage"_q);
+	return result;
+}
+
+QString CollageHeadlineFamily() {
+	return u"Oswald"_q;
+}
+
+QString CollageSerifFamily() {
+	return u"PT Serif"_q;
+}
+
+QString CollageMonoFamily() {
+	return u"PT Mono"_q;
+}
+
+int CollageBorder() {
+	return Scaled(kCollageBorder);
+}
+
+int CollageShadowOffset() {
+	return Scaled(kCollageShadowOffset);
 }
 
 void SetWebIconBackground(const void *key, const style::color &color) {
@@ -596,6 +677,11 @@ QColor Foreground(Role role, State state) {
 }
 
 QString PrepareFontFamily(const QString &custom) {
+	const auto collage = QDir(u":/gui/chickengram/fonts/collage/"_q).entryInfoList(
+		{ u"*.ttf"_q });
+	for (const auto &file : collage) {
+		QFontDatabase::addApplicationFont(file.absoluteFilePath());
+	}
 	auto loaded = false;
 	const auto files = QDir(u":/gui/chickengram/fonts/"_q).entryInfoList(
 		{ u"*.ttf"_q });
@@ -623,6 +709,7 @@ void ApplyStyleOverrides() {
 	ApplyDensity();
 	ApplyWebLayout();
 	ApplyCorners();
+	ApplyCollage();
 }
 
 void ApplyMotion() {

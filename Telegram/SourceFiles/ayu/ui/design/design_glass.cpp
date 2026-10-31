@@ -609,7 +609,7 @@ protected:
 } // namespace
 
 void SetupGlassMenus() {
-	if (!AyuSettings::getInstance().designGlass()) {
+	if (!AyuSettings::getInstance().designGlass() || CollageMode()) {
 		return;
 	}
 	const auto &colors = Colors();

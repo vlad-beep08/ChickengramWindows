@@ -80,8 +80,14 @@ void BuildDesign(SectionBuilder &builder, AyuSectionBuilder &ayu) {
 		.initialSelection = themeSelection,
 		.options = std::move(themeTitles),
 		.setter = [=](int index) {
-			if (index >= 0 && index < int(themes.size())) {
-				AyuDesign::ApplyTheme(themes[index].id);
+			if (index < 0 || index >= int(themes.size())) {
+				return;
+			}
+			const auto collage = u"collage"_q;
+			const auto was = (AyuDesign::CurrentThemeId() == collage);
+			AyuDesign::ApplyTheme(themes[index].id);
+			if (was != (themes[index].id == collage)) {
+				ShowRestartPrompt(controller);
 			}
 		},
 		.keywords = { u"theme"_q, u"collage"_q, u"коллаж"_q },

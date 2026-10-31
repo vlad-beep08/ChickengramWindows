@@ -10,6 +10,7 @@
 #include "ui/painter.h"
 #include "ui/rp_widget.h"
 #include "ui/style/style_core_scale.h"
+#include "styles/palette.h"
 
 namespace AyuDesign {
 namespace {
@@ -17,6 +18,20 @@ namespace {
 constexpr auto kShadowLayers = 4;
 constexpr auto kIslandShadowOpacity = 0.06;
 constexpr auto kPillShadowOpacity = 0.1;
+
+void PaintPaperEdge(QPainter &p, QRect rect, int radius) {
+	const auto border = CollageBorder();
+	const auto offset = CollageShadowOffset();
+	auto hq = PainterHighQualityEnabler(p);
+	p.setPen(Qt::NoPen);
+	p.setBrush(st::windowBgRipple);
+	p.drawRoundedRect(rect.translated(offset, offset), radius, radius);
+	p.setBrush(st::inputBorderFg);
+	p.drawRoundedRect(
+		rect.marginsAdded({ border, border, border, border }),
+		radius + border,
+		radius + border);
+}
 
 } // namespace
 
@@ -43,10 +58,22 @@ void PaintSoftShadow(
 }
 
 void PaintIslandShadow(QPainter &p, QRect island) {
+	if (island.isEmpty()) {
+		return;
+	} else if (CollageMode()) {
+		PaintPaperEdge(p, island, IslandRadius());
+		return;
+	}
 	PaintSoftShadow(p, island, IslandRadius(), kIslandShadowOpacity);
 }
 
 void PaintPillShadow(QPainter &p, QRect pill, int radius) {
+	if (pill.isEmpty()) {
+		return;
+	} else if (CollageMode()) {
+		PaintPaperEdge(p, pill, std::min(radius, pill.height() / 2));
+		return;
+	}
 	PaintSoftShadow(p, pill, radius, kPillShadowOpacity);
 }
 

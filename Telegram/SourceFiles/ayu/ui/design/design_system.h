@@ -79,6 +79,12 @@ enum class State {
 [[nodiscard]] constexpr bool WebLayout() {
 	return true;
 }
+[[nodiscard]] bool CollageMode();
+[[nodiscard]] QString CollageHeadlineFamily();
+[[nodiscard]] QString CollageSerifFamily();
+[[nodiscard]] QString CollageMonoFamily();
+[[nodiscard]] int CollageBorder();
+[[nodiscard]] int CollageShadowOffset();
 
 [[nodiscard]] int IslandMargin();
 [[nodiscard]] int IslandRadius();
